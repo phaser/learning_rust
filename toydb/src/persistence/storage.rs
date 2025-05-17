@@ -2,13 +2,13 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::fs::OpenOptions;
 
-pub struct ToyDbStorage {
+pub struct Storage {
     pub path: String,
 }
 
-impl ToyDbStorage {
+impl Storage {
     pub fn new(path: String) -> Self {
-        ToyDbStorage { path }
+        Storage { path }
     }
 
     pub fn append(&self, key: &String, value: &String) {
@@ -44,14 +44,14 @@ impl ToyDbStorage {
 #[cfg(test)]
 mod tests {
     use tempdir::TempDir;
-    use crate::persistence::toydb_storage::ToyDbStorage;
+    use crate::persistence::storage::Storage;
 
     #[test]
     fn test_create_new_toydb_storage() {
         let dir = TempDir::new("test").unwrap();
         let file_path = dir.path().join("test.db");
         let path = file_path.to_str().unwrap().to_string();
-        let toydb_storage = ToyDbStorage::new(path);
+        let toydb_storage = Storage::new(path);
         assert_eq!(toydb_storage.path, file_path.to_str().unwrap().to_string());
     }
 
@@ -60,7 +60,7 @@ mod tests {
         let dir = TempDir::new("test").unwrap();
         let file_path = dir.path().join("test.db");
         let path = file_path.to_str().unwrap().to_string();
-        let db = ToyDbStorage::new(path);
+        let db = Storage::new(path);
         db.append(&"test".to_string(), &"value".to_string());
         db.append(&"test1".to_string(), &"value1".to_string());
 

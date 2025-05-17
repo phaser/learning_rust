@@ -1,1 +1,1 @@
-pub mod toydb_storage;
+pub mod storage;
