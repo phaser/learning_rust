@@ -24,20 +24,30 @@ impl Storage {
     }
 
     pub fn get_mut_file(&self) -> File {
+        OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.path)
+            .expect("Unable to open database file.");
         File::open(&self.path).unwrap()
     }
 
-    pub fn get_key_value(&self, file: &mut File) -> (String, String) {
-        (Self::read_key(file), Self::read_key(file))
+    pub fn get_key_value(&self, file: &mut File) -> Option<(String, String)> {
+        let key = Self::read_key(file)?;
+        let value = Self::read_key(file)?;
+        Some((key, value))
     }
 
-    fn read_key(file: &mut File) -> String {
+    fn read_key(file: &mut File) -> Option<String> {
         let mut fsize: [u8; 8] = [0; 8];
-        file.read(&mut fsize).unwrap();
+        let no_bytes_read = file.read(&mut fsize).ok()?;
+        if no_bytes_read != 8 {
+            return None;
+        }
         let n = usize::from_be_bytes(*&fsize);
         let mut key = vec![0u8; n];
-        file.read_exact(&mut key).unwrap();
-        String::from_utf8(key).unwrap()
+        file.read_exact(&mut key).ok()?;
+        String::from_utf8(key).ok()
     }
 }
 
@@ -61,15 +71,23 @@ mod tests {
         let file_path = dir.path().join("test.db");
         let path = file_path.to_str().unwrap().to_string();
         let db = Storage::new(path);
+        let mut f = db.get_mut_file();
+        let res = db.get_key_value(&mut f);
+        assert_eq!(res, None);
+
         db.append(&"test".to_string(), &"value".to_string());
         db.append(&"test1".to_string(), &"value1".to_string());
 
-        let mut f = db.get_mut_file();
-        let (key, value) = db.get_key_value(&mut f);
+        let (key, value) = db.get_key_value(&mut f).unwrap();
         assert_eq!(key, "test".to_string());
         assert_eq!(value, "value".to_string());
-        let (key, value) = db.get_key_value(&mut f);
+        let (key, value) = db.get_key_value(&mut f).unwrap();
         assert_eq!(key, "test1".to_string());
         assert_eq!(value, "value1".to_string());
+        
+        let res = db.get_key_value(&mut f);
+        assert_eq!(res, None);
     }
+
+
 }
