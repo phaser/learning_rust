@@ -88,6 +88,4 @@ mod tests {
         let res = db.get_key_value(&mut f);
         assert_eq!(res, None);
     }
-
-
 }
