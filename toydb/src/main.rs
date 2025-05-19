@@ -14,7 +14,7 @@ mod database;
 
 type Store = Arc<RwLock<Database>>;
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
     let store: Store = Arc::new(RwLock::new(Database::new("test.db".to_string())));
@@ -26,6 +26,7 @@ async fn main() {
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    println!("Listening on http://0.0.0.0:3000");
     axum::serve(listener, app).await.unwrap();
 }
 
