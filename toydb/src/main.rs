@@ -4,6 +4,7 @@ use axum::{
     Router,
     response::{IntoResponse, Response},
     http::StatusCode,
+    body::Bytes
 };
 use tokio::sync::RwLock;
 use std::sync::Arc;
@@ -20,7 +21,7 @@ async fn main() {
     let store: Store = Arc::new(RwLock::new(Database::new("test.db".to_string())));
 
     let app = Router::new()
-        .route("/set/{k}/{v}", post(store_set_value))
+        .route("/set/{k}", post(store_set_value))
         .route("/get/{k}", get(store_get_value))
         .with_state(store);
 
@@ -48,9 +49,12 @@ impl IntoResponse for GetResult {
 
 async fn store_set_value(
     State(store): State<Store>,
-    Path((k, v)): Path<(String, String)>,
-) {
+    Path(k): Path<String>,
+    body: Bytes,
+) -> impl IntoResponse {
+    let v = String::from_utf8_lossy(&body).to_string();
     store.write().await.put(k, v);
+    StatusCode::OK
 }
 
 async fn store_get_value(
